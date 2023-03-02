@@ -45,7 +45,6 @@ class Thread
     #[ORM\Column(length: 50)]
     private ?string $title = null;
 
-    #[Assert\NotBlank]
     #[Groups(['group:read', 'group:create', 'group:update'])]
     #[ORM\Column(type: Types::TEXT)]
     private ?string $content = null;

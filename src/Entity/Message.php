@@ -7,15 +7,40 @@ use App\Repository\MessageRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
+use App\State\UserPasswordHasher;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Patch;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Put;
+use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Validator\Constraints as Assert;
+
 #[ORM\Entity(repositoryClass: MessageRepository::class)]
-#[ApiResource]
+#[ApiResource(
+    operations: [
+        new GetCollection(),
+        new Post(validationContext: ['groups' => ['Default', 'group:create']]),
+        new Get(),
+        //new Put(processor: UserPasswordHasher::class),
+        new Patch(),
+        new Delete(),
+    ],
+    normalizationContext: ['groups' => ['group:read']],
+    denormalizationContext: ['groups' => ['group:create', 'group:update']],
+)]
 class Message
 {
+    #[Groups(['group:read'])]
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
 
+    #[Groups(['group:read', 'group:create'])]
     #[ORM\ManyToOne(inversedBy: 'messages')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Thread $thread = null;
@@ -24,6 +49,8 @@ class Message
     #[ORM\JoinColumn(nullable: false)]
     private ?User $owner = null;
 
+    #[Assert\NotBlank]
+    #[Groups(['group:read', 'group:create', 'group:update'])]
     #[ORM\Column(type: Types::TEXT)]
     private ?string $content = null;
 
@@ -35,6 +62,12 @@ class Message
 
     #[ORM\Column]
     private ?bool $masked = null;
+
+    public function __construct()
+    {
+        $this->createdAt = new \DateTimeImmutable();
+        $this->masked = false;
+    }
 
     public function getId(): ?int
     {

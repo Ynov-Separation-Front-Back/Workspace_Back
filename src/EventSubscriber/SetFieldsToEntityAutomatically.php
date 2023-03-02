@@ -10,6 +10,7 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use App\Entity\Group;
+use App\Entity\Message;
 use App\Entity\Thread;
 
 class SetFieldsToEntityAutomatically implements EventSubscriberInterface {
@@ -32,6 +33,10 @@ class SetFieldsToEntityAutomatically implements EventSubscriberInterface {
         }
 
         if ($user !== null && get_class($entity) === Thread::class && in_array($methode, [Request::METHOD_POST, Request::METHOD_PATCH])) {
+            $entity->setOwner($user);
+        }
+
+        if ($user !== null && get_class($entity) === Message::class && in_array($methode, [Request::METHOD_POST, Request::METHOD_PATCH])) {
             $entity->setOwner($user);
         }
     }
