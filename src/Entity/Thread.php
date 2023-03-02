@@ -8,19 +8,45 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use App\Repository\GroupRepository;
+use App\State\UserPasswordHasher;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Patch;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Put;
+use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: ThreadRepository::class)]
-#[ApiResource]
+#[ApiResource(
+    operations: [
+        new GetCollection(),
+        new Post(validationContext: ['groups' => ['Default', 'group:create']]),
+        new Get(),
+        //new Put(processor: UserPasswordHasher::class),
+        new Patch(),
+        new Delete(),
+    ],
+    normalizationContext: ['groups' => ['group:read']],
+    denormalizationContext: ['groups' => ['group:create', 'group:update']],
+)]
 class Thread
 {
+    #[Groups(['group:read'])]
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column]
+    #[ORM\Column(type: 'integer')]
     private ?int $id = null;
 
+    #[Assert\NotBlank]
+    #[Groups(['group:read', 'group:create', 'group:update'])]
     #[ORM\Column(length: 50)]
     private ?string $title = null;
 
+    #[Assert\NotBlank]
+    #[Groups(['group:read', 'group:create', 'group:update'])]
     #[ORM\Column(type: Types::TEXT)]
     private ?string $content = null;
 
@@ -28,6 +54,7 @@ class Thread
     #[ORM\JoinColumn(nullable: false)]
     private ?User $owner = null;
 
+    #[Groups(['group:read', 'group:create'])]
     #[ORM\ManyToOne(inversedBy: 'threads')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Group $relatedGroup = null;
@@ -41,6 +68,7 @@ class Thread
     public function __construct()
     {
         $this->messages = new ArrayCollection();
+        $this->createdAt = new \DateTimeImmutable();
     }
 
     public function getId(): ?int
