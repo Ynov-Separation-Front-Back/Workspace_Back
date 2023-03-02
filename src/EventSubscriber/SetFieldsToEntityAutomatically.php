@@ -39,5 +39,9 @@ class SetFieldsToEntityAutomatically implements EventSubscriberInterface {
         if ($user !== null && get_class($entity) === Message::class && in_array($methode, [Request::METHOD_POST, Request::METHOD_PATCH])) {
             $entity->setOwner($user);
         }
+
+        if ($user !== null && get_class($entity) === Message::class && in_array($methode, [Request::METHOD_PATCH])) {
+            $entity->setUpdatedAt(new \DateTime());
+        }
     }
 }
