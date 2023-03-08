@@ -10,6 +10,7 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use App\Entity\Group;
+use App\Entity\GroupRequest;
 use App\Entity\Message;
 use App\Entity\Thread;
 
@@ -26,22 +27,29 @@ class SetFieldsToEntityAutomatically implements EventSubscriberInterface {
 
     public function setFieldToEntity(ViewEvent $event) {
         $entity = $event->getControllerResult();
-        $user = $this->tokenStorage->getToken()->getUser();
         $methode = $event->getRequest()->getMethod();
-        if ($user !== null && get_class($entity) === Group::class && in_array($methode, [Request::METHOD_POST, Request::METHOD_PATCH])) {
+        if (get_class($entity) === User::class && in_array($methode, [Request::METHOD_POST])) {
+            return;
+        }
+        $user = $this->tokenStorage->getToken()->getUser();
+        if ($user !== null && get_class($entity) === Group::class && in_array($methode, [Request::METHOD_POST])) {
             $entity->setOwner($user);
         }
 
-        if ($user !== null && get_class($entity) === Thread::class && in_array($methode, [Request::METHOD_POST, Request::METHOD_PATCH])) {
+        if ($user !== null && get_class($entity) === Thread::class && in_array($methode, [Request::METHOD_POST])) {
             $entity->setOwner($user);
         }
 
-        if ($user !== null && get_class($entity) === Message::class && in_array($methode, [Request::METHOD_POST, Request::METHOD_PATCH])) {
+        if ($user !== null && get_class($entity) === Message::class && in_array($methode, [Request::METHOD_POST])) {
             $entity->setOwner($user);
         }
 
         if ($user !== null && get_class($entity) === Message::class && in_array($methode, [Request::METHOD_PATCH])) {
             $entity->setUpdatedAt(new \DateTime());
+        }
+
+        if ($user !== null && get_class($entity) === GroupRequest::class && in_array($methode, [Request::METHOD_POST])) {
+            $entity->setUser($user);
         }
     }
 }
